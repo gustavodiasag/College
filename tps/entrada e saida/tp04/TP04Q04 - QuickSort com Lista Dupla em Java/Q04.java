@@ -3,7 +3,7 @@ import java.io.PrintWriter;
 import java.util.*;
 import java.text.SimpleDateFormat;
 
-class Q06 {
+class Q04 {
 
 	public static void main(String[] args) throws Exception {
 
@@ -66,7 +66,7 @@ class Q06 {
 		String input = "";
 
 		// Transferring to the list
-		while (!endOfTest(input = MyIO.readLine())) list.insertLast(getGame(games, Integer.parseInt(input)));
+		while (!endOfTest(input = MyIO.readLine())) list.insert(getGame(games, Integer.parseInt(input)));
 
 		long start = (new Date()).getTime(), time;
 
@@ -117,50 +117,70 @@ class Node {
 	Node(Game game) { this.game = game; this.previous = this.next = null; }
 }
 
-class DynamicLinkedList {
+class DoublyLinkedList {
 
-	private Node first, last;
+	private Node head;
 	public int comparisons, movements;
 
-	DynamicLinkedList() { this.first = new Node(); this.last = first; }
+	DoublyLinkedList() { this.head = new Node(); }
 
 	public void insert(Game game) {
 		
-		last.next = new Node(game);
-		last.next.previous = last;
-		last = last.next;
+		Node newNode = new Node(game);
+		newNode.next = head;
+		head.previous = newNode;
+		newNode.previous = null;
+		head = head.previous;
+	}
+	
+	public void sort() {
+		
+		Node last = this.head.next;
+
+		while (last.next != null) last = last.next;
+
+		sort(this.head.next, last);
 	}
 
-	public void sort() { this.sort(0, this.elements - 1); }
-
-	public void sort(int left, int right) {
+	private void sort(Node left, Node right) {
 		
-		int i = left, j = right;
-
-		Game pivot = games[(left + right)/2];
-
-		while (i <= j) {
+		if (right != null && left != right && left != right.next) {
 			
-			while (games[i].getDate().before(pivot.getDate())) { comparisons++; i++; }
-			while (games[j].getDate().after(pivot.getDate())) { comparisons++; j--; }
+			Node tmp = partition(left, right);
 
-			if (i <= j) {
+			this.sort(left, tmp.previous);
+			this.sort(tmp.next, right);
+		}
+	}
 
-				Game tmp = games[i];
-				games[i] = games[j];
-				games[j] = tmp;
+	private Node partition(Node left, Node right) {
+		
+		Game game = right.game;
 
-				movements += 3;
+		Node i = left.previous;
 
-				i++; j--;
+		for (Node j = left; j != right; j = j.next) {
+
+			if (j.game.getDate().before(game.getDate())) {
+				
+				i = (i == null) ? left : i.next;
+				
+				Game tmp = i.game;
+				i.game = j.game;
+				j.game = tmp;
 			}
 		}
 
-		if (left < j) sort(left, j);
-		if (i < right) sort(i, right);
+		i = (i == null) ? left : i.next;
+		
+		Game tmp = i.game;
+		i.game = right.game;
+		right.game = tmp;
+
+		return i;
 	}
 
-	public void show() { for (int i = 0; i < elements; i++) games[i].print(); }	
+	public void show() { for (Node n = head.next; n != null; n = n.next) n.game.print(); }	
 }
 
 class Game {
